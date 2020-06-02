@@ -124,9 +124,82 @@ void serverThreadEntry(const ThreadParams& params) {
     // Invoke request handler
     params.reqHandler(tokens[1], &responseIface);
     responseIface.handleMissingResponse();
-
-    return;
 }
+
+struct Queue {
+    struct Node {
+        ThreadParams params;
+        Owned<Node> next;
+
+        explicit Node(ThreadParams&& params) : params{std::forward<ThreadParams>(params)} {
+        }
+    };
+
+    Owned<Node> first;
+    Borrowed<Node> last;
+
+    Mutex lock;
+    ConditionVariable available;
+
+    void pushBack(ThreadParams&& params) {
+        {
+            LockGuard<Mutex> guard{lock};
+
+            auto node = Owned<Node>::create(std::forward<ThreadParams>(params));
+            if (!first) {
+                first = std::move(node);
+                last = first.borrow();
+            } else {
+                last->next = std::move(node);
+                last = last->next.borrow();
+            }
+        }
+        available.wakeOne();
+    }
+
+    bool popFront(ThreadParams* params) {
+        LockGuard<Mutex> guard{lock};
+
+        while (!first) {
+            available.wait(guard);
+        }
+        PLY_ASSERT(first != nullptr);
+
+        Owned<Node> current = std::move(first);
+        first = std::move(current->next);
+
+        // If the queue is empty, make sure last is not pointing to anything.
+        if (!first) {
+            last = nullptr;
+        }
+
+        *params = std::move(current->params);
+        return true;
+    }
+};
+
+struct ThreadPool {
+    Queue* queue;
+    Array<Thread> threads;
+
+    explicit ThreadPool(Queue* queue) : queue{queue} {
+    }
+
+    void start(u32 size) {
+        threads.resize(size);
+        for (auto& thread : threads) {
+            thread.run([this] {
+                for (;;) {
+                    ThreadParams params;
+                    if (!queue->popFront(&params)) {
+                        break;
+                    }
+                    serverThreadEntry(params);
+                }
+            });
+        }
+    }
+};
 
 bool runServer(u16 port, const RequestHandler& reqHandler) {
     TCPListener listener = Socket::bindTCP(port);
@@ -135,14 +208,22 @@ bool runServer(u16 port, const RequestHandler& reqHandler) {
         return false;
     }
 
+    Queue queue;
+    ThreadPool pool{&queue};
+    pool.start(4);
+
     for (;;) {
         ThreadParams params;
         params.tcpConn = listener.accept();
         // FIXME: Return if port stopped listening
 
+        StdOut::createStringWriter().format("Connection received from {}:{}\n",
+                                            params.tcpConn->remoteAddress().toString(),
+                                            params.tcpConn->remotePort());
+
         params.reqHandler = reqHandler;
-        // FIXME: Use a thread pool instead of spawning a thread for every request
-        Thread{[params{std::move(params)}] { serverThreadEntry(params); }};
+
+        queue.pushBack(std::move(params));
     }
     return true;
 }
