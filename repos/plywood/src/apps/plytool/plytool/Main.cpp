@@ -28,6 +28,97 @@ bool command_open(PlyToolCommandEnv* env);
 
 int main(int argc, char* argv[]) {
     using namespace ply;
+    using namespace ply::cli;
+
+    auto cl = commandLine("plytool", "Manage plywood workspaces", [](auto* c) {
+        c->flag("debug", "Enable debug output", [](auto* f) {
+            f->shortName("d");
+        });
+
+        c->command("bootstrap", "Generate the build environment to bootstrap plytool");
+
+        c->command("build", "Build the targets in the active folder");
+
+        c->command("cleanup");
+
+        c->command("codegen", "Run the codegen command on the active folder");
+
+        c->group("extern", "Manage external libraries for the active folder", [](auto* c) {
+            c->command("list");
+            c->command("info");
+            c->command("select");
+            c->command("selected");
+            c->command("install");
+        });
+
+        c->group("folder", "Manages the active folder in the workspace", [](auto* c) {
+            c->flag("root", "Set the root of the plytool workspace", [](auto* f) {
+                f->shortName("r");
+                f->defaultValue("/");
+            });
+
+            c->command("list", "List available folders in the workspace");
+            c->command("create", "Create a new folder in the workspace");
+            c->command("delete", "Delete a folder in the workspace");
+            c->command("set", "Set the active folder in the workspace");
+        });
+
+        c->command("generate", "Generate the build environment for the active folder");
+
+        c->group("module", [](auto* c) { c->command("list"); });
+
+        c->group("target", "Manage build targets in the active folder", [](auto* c) {
+            c->command("list");
+            c->command("add");
+            c->command("remove");
+            c->command("graph");
+        });
+    });
+
+    const char* args[] = {
+        "plytool",
+        "bootstrap",
+        "-debug",
+        // "folder",
+        // "list",
+        "-sort",
+    };
+
+    auto sw = StdOut::createStringWriter();
+    auto context = cl.parse(sizeof(args) / sizeof(const char*), (char**) args);
+    if (!context.isRunnable()) {
+        context.printUsage(&sw);
+    } else {
+        context.run();
+    }
+
+    // sw << "Command found: " << context.lastCommand->name() << '\n';
+
+    // for (auto& command : context.commands) {
+    //     sw << command << '\n';
+    // }
+
+    return 0;
+
+#if 0
+
+
+    NewCommandLine commandLine{ argc, argv };
+
+    auto def = CommandLineDefinition();
+    def.argument("command");
+    def.argument("sub-command");
+    def.flag("debug", "d", "Enable debugging");
+
+    auto sw = StdOut::createStringWriter();
+    def.printUsage(&sw, "plytool");
+
+    commandLine.map(def);
+
+    return 0;
+
+
+
 
     auto errorHandler = [](build::ErrorHandler::Level errorLevel, HybridString&& error) {
         StringWriter sw;
@@ -106,4 +197,5 @@ int main(int argc, char* argv[]) {
         fatalError(String::format("Unrecognized command \"{}\"", category));
     }
     return success ? 0 : 1;
+#endif // 0
 }
