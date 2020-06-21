@@ -8,6 +8,7 @@
 #include <web-common/FetchFromFileSystem.h>
 #include <web-common/SourceCode.h>
 #include <web-common/Echo.h>
+#include <ply-cli/Cli.h>
 
 using namespace ply;
 using namespace web;
@@ -60,6 +61,17 @@ struct CommandLine {
 };
 
 int main(int argc, char* argv[]) {
+    auto cl = cli::CommandLine{"WebServer", "Serve the plywood documentation."};
+    cl.addFlag("help", "Print this help text").shortName("h").defaultValue("false");
+    cl.addFlag("port", "The port used for listening to incoming connections").shortName("p");
+    auto context = cl.parse(argc, argv);
+
+    auto sw = StdOut::createStringWriter();
+    context.printUsage(&sw);
+    sw.flush();
+
+    return 0;
+
     Socket::initialize(IPAddress::V6);
     String dataRoot;
     u16 port = 0;

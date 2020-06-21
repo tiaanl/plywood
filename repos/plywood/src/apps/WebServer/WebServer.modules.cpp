@@ -11,6 +11,7 @@ void module_WebServer(ModuleArgs* args) {
     args->addTarget(Visibility::Private, "web-common");
     args->addTarget(Visibility::Private, "web-serve-docs");
     args->addTarget(Visibility::Private, "web-documentation");
+    args->addTarget(Visibility::Private, "cli");
 
     if (args->projInst->env->isGenerating) {
         String configFile = String::format(
