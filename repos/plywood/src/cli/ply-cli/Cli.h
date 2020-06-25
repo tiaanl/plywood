@@ -3,6 +3,7 @@
   \\\/  https://plywood.arc80.com/
 ------------------------------------*/
 #pragma once
+#if 0
 #include <ply-runtime/Core.h>
 #include <ply-runtime/string/StringView.h>
 #include <ply-runtime/string/String.h>
@@ -141,7 +142,7 @@ private:
 
 class Context {
 public:
-    static Context build(ArrayView<StringView> arguments, Command* command) {
+    static Context build(ArrayView<const StringView> arguments, Command* command) {
         Context result;
 
         result.merge(command);
@@ -150,8 +151,6 @@ public:
             if (arguments[i][0] == '-') {
                 continue;
             }
-
-            StdOut::createStringWriter() << "Checking argument: " << arguments[i] << '\n';
 
             auto c = result.m_leafCommand->findCommand(arguments[i]);
             if (c) {
@@ -176,9 +175,9 @@ public:
         while (rootCommand->m_parent) {
             rootCommand = rootCommand->m_parent;
         }
-        if (!rootCommand || !m_leafCommand) {
+        if (!m_leafCommand) {
             // TODO: This should really be an assert, but static analysis complains about null
-            // dereferencing.
+            // dereferences.
             return;
         }
 
@@ -293,7 +292,7 @@ private:
         }
     }
 
-    Command* m_leafCommand;
+    Command* m_leafCommand = nullptr;
     HashMap<FlagsByNameTraits> m_flagsByName;
     HashMap<FlagsByShortNameTraits> m_flagsByShortName;
 };
@@ -308,8 +307,7 @@ public:
         return parse(args.view());
     }
 
-private:
-    Context parse(ArrayView<StringView> args) {
+    Context parse(ArrayView<const StringView> args) {
         auto context = Context::build(args, this);
 
         return context;
@@ -318,3 +316,4 @@ private:
 
 } // namespace cli
 } // namespace ply
+#endif  // 0
