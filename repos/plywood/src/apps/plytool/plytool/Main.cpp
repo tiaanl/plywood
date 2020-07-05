@@ -8,6 +8,7 @@
 #include <ply-build-repo/ProjectInstantiator.h>
 #include <ply-runtime/algorithm/Find.h>
 #include <ply-build-repo/ErrorHandler.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 
@@ -28,7 +29,6 @@ bool command_open(PlyToolCommandEnv* env);
 
 int main(int argc, char* argv[]) {
     using namespace ply;
-    using namespace ply::cli;
 
 #if 0
     auto cl = commandLine("plytool", "Manage plywood workspaces", [](auto* c) {
@@ -102,25 +102,40 @@ int main(int argc, char* argv[]) {
     return 0;
 #endif // 0
 
-#if 0
-    auto cl = CL{"plytool", "Manage plywood workspace"};
-    cl.addFlag("debug", "Enable debugging");
-    auto& folderCommand = cl.addCommand("folder", "Manager folders in the plywood workspace");
-    auto& folderListCommand = folderCommand.addCommand("list", "List folders in the workspace");
-    folderListCommand.addFlag("verbose", "Enable verbosity").defaultValue("1");
-    folderCommand.addCommand("delete", "Delete a folder in the workspace");
-
+#if 1
     auto sw = StdOut::createStringWriter();
 
-    auto context = cl.parse(argc, argv);
-    context.printUsage(&sw);
+    cli::Command folderListCommand{"list", "List folders in the workspace"};
+    folderListCommand.add(
+        cli::Option{"verbose", "Enable verbosity in logging"}.shortName("v").defaultValue("4"));
+    folderListCommand.handler([&sw](auto* ctx) {
+        auto verbosityLevel = ctx->option("verbose")->to<u32>();
+        sw << "Running list command with verbosity level: " << verbosityLevel << "\n";
 
-    sw << "Found command: " << context.command()->name() << '\n';
+        if (ctx->option("debug")->isPresent()) {
+            sw << "Debugging is enabled\n";
+        }
+    });
+
+    cli::Command folderDeleteCommand{"delete", "Delete a folder in the workspace"};
+
+    cli::Command folderCommand{"folder", "Manager folders in the plywood workspace"};
+    folderCommand.add(std::move(folderListCommand));
+    folderCommand.add(std::move(folderDeleteCommand));
+
+    cli::CommandLine cl{"plytool", "Manage plywood workspace"};
+    cl.add(cli::Option{"debug", "Enable debugging."}.shortName('d'));
+    cl.add(cli::Option("log-filename", "Specify a file to send the log output to.").shortName('l'));
+    cl.add(std::move(folderCommand));
+
+    auto context = cl.parse(argc, argv);
+    // context.printUsage(&sw);
+    context.run(&sw);
 
     return 0;
-#endif  // 0
+#endif // 0
 
-#if 1
+#if 0
     auto errorHandler = [](build::ErrorHandler::Level errorLevel, HybridString&& error) {
         StringWriter sw;
         if (errorLevel == build::ErrorHandler::Error || errorLevel == build::ErrorHandler::Fatal) {

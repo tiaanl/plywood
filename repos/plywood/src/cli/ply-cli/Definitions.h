@@ -1,10 +1,17 @@
+/*------------------------------------
+  ///\  Plywood C++ Framework
+  \\\/  https://plywood.arc80.com/
+------------------------------------*/
 #pragma once
 #include <ply-runtime/container/Array.h>
 #include <ply-runtime/string/String.h>
 #include <ply-runtime/container/HashMap.h>
+#include <ply-runtime/container/Functor.h>
 
 namespace ply {
 namespace cli {
+
+class Context;
 
 class BaseDefinition {
 public:
@@ -25,90 +32,66 @@ protected:
     String m_description;
 };
 
-template <typename T>
-class DefinitionWithShortName : public BaseDefinition {
+class Option : public BaseDefinition {
 public:
-    DefinitionWithShortName(StringView name, StringView description)
-        : BaseDefinition{name, description} {
+    Option(StringView name, StringView description) : BaseDefinition{name, description} {
     }
 
-    const String& shortName() const {
+    StringView shortName() const {
         return m_shortName;
     }
 
-    T& setShortName(StringView shortName) {
+    Option& shortName(StringView shortName) {
         m_shortName = shortName;
-        return static_cast<T&>(*this);
+        return *this;
+    }
+
+    StringView defaultValue() const {
+        return m_defaultValue;
+    }
+
+    Option& defaultValue(StringView defaultValue) {
+        m_defaultValue = defaultValue;
+        return *this;
     }
 
 protected:
     String m_shortName;
+    String m_defaultValue;
 };
 
-class FlagDefinition : public DefinitionWithShortName<FlagDefinition> {
+class Command : public BaseDefinition {
 public:
-    FlagDefinition(StringView name, StringView description)
-        : DefinitionWithShortName{name, description} {
-    }
-};
+    using Handler = Functor<void(Context*)>;
 
-class OptionDefinition : public DefinitionWithShortName<FlagDefinition> {
-public:
-    OptionDefinition(StringView name, StringView description)
-        : DefinitionWithShortName{name, description} {
-    }
-};
-
-class ArgumentDefinition : public BaseDefinition {
-public:
-    ArgumentDefinition(StringView name, StringView description)
-        : BaseDefinition{name, description}, m_required{false} {
-    }
-
-    bool isRequired() const {
-        return m_required;
-    }
-
-    ArgumentDefinition& setRequired(bool required) {
-        m_required = required;
-        return *this;
-    }
-
-private:
-    bool m_required;
-};
-
-class CommandDefinition : public BaseDefinition {
-public:
     // This constructor is only public, because HashMap needs to default construct objects on
     // insert.
-    CommandDefinition() : BaseDefinition{"", ""} {
+    Command() : BaseDefinition{"", ""} {
     }
 
-    CommandDefinition(StringView name, StringView description) : BaseDefinition{name, description} {
+    Command(StringView name, StringView description) : BaseDefinition{name, description} {
     }
 
-    FlagDefinition& addFlag(StringView name, StringView description);
-    OptionDefinition& addOption(StringView name, StringView description);
-    ArgumentDefinition& addArgument(StringView name, StringView description);
-    CommandDefinition& addSubCommand(StringView name, StringView description);
-    CommandDefinition* findCommand(StringView name) const;
+    Command& handler(Handler handle);
+    Command& add(Option option);
+    Command& add(Command command);
+
+    Command* findCommand(StringView name) const;
 
 private:
     friend class Context;
 
     struct SubCommandsTraits {
         using Key = StringView;
-        using Item = CommandDefinition;
+        using Item = Command;
 
         static Key comparand(const Item& item) {
             return item.name();
         }
     };
 
-    Array<FlagDefinition> m_flags;
-    Array<OptionDefinition> m_options;
-    Array<ArgumentDefinition> m_arguments;
+    Handler m_handler;
+    Array<Option> m_options;
     HashMap<SubCommandsTraits> m_subCommands;
 };
 

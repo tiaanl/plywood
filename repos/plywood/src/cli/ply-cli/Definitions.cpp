@@ -1,28 +1,30 @@
+/*------------------------------------
+  ///\  Plywood C++ Framework
+  \\\/  https://plywood.arc80.com/
+------------------------------------*/
 #include <ply-cli/Definitions.h>
 
 namespace ply {
 namespace cli {
 
-FlagDefinition& CommandDefinition::addFlag(StringView name, StringView description) {
-    return m_flags.append(name, description);
+Command& Command::handler(Handler handler) {
+    m_handler = std::move(handler);
+    return *this;
 }
 
-OptionDefinition& CommandDefinition::addOption(StringView name, StringView description) {
-    return m_options.append(name, description);
+Command& Command::add(Option option) {
+    m_options.append(std::move(option));
+    return *this;
 }
 
-ArgumentDefinition& CommandDefinition::addArgument(StringView name, StringView description) {
-    return m_arguments.append(name, description);
-}
-
-CommandDefinition& CommandDefinition::addSubCommand(StringView name, StringView description) {
-    auto cursor = m_subCommands.insertOrFind(name);
+Command& Command::add(Command command) {
+    auto cursor = m_subCommands.insertOrFind(command.name());
     PLY_ASSERT(!cursor.wasFound());
-    *cursor = {name, description};
-    return *cursor;
+    *cursor = std::move(command);
+    return *this;
 }
 
-CommandDefinition* CommandDefinition::findCommand(StringView name) const {
+Command* Command::findCommand(StringView name) const {
     auto cursor = m_subCommands.find(name);
     if (cursor.wasFound()) {
         return &*cursor;
