@@ -7,6 +7,7 @@
 #include <ply-runtime/string/String.h>
 #include <ply-runtime/container/HashMap.h>
 #include <ply-runtime/container/Functor.h>
+#include <ply-runtime/container/Owned.h>
 
 namespace ply {
 namespace cli {
@@ -83,10 +84,10 @@ private:
 
     struct SubCommandsTraits {
         using Key = StringView;
-        using Item = Command;
+        using Item = Owned<Command>;
 
         static Key comparand(const Item& item) {
-            return item.name();
+            return item->name();
         }
     };
 

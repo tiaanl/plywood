@@ -20,14 +20,14 @@ Command& Command::add(Option option) {
 Command& Command::add(Command command) {
     auto cursor = m_subCommands.insertOrFind(command.name());
     PLY_ASSERT(!cursor.wasFound());
-    *cursor = std::move(command);
+    *cursor = Owned<Command>::create(std::move(command));
     return *this;
 }
 
 Command* Command::findCommand(StringView name) const {
     auto cursor = m_subCommands.find(name);
     if (cursor.wasFound()) {
-        return &*cursor;
+        return cursor->get();
     }
 
     return nullptr;

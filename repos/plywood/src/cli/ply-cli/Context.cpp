@@ -62,17 +62,17 @@ void Context::printUsage(StringWriter* sw) const {
 
         u32 maxWidth = 0;
         for (auto& child : children) {
-            maxWidth = max(child.m_name.numBytes, maxWidth);
+            maxWidth = max(child->m_name.numBytes, maxWidth);
         }
         maxWidth += 2;
 
         for (auto& child : children) {
-            *sw << "  " << child.m_name;
-            for (u32 i = 0; i < maxWidth - child.m_name.numBytes; ++i) {
+            *sw << "  " << child->m_name;
+            for (u32 i = 0; i < maxWidth - child->m_name.numBytes; ++i) {
                 *sw << ' ';
             }
-            if (!child.m_description.isEmpty()) {
-                *sw << child.m_description;
+            if (!child->m_description.isEmpty()) {
+                *sw << child->m_description;
             }
             *sw << '\n';
         }
