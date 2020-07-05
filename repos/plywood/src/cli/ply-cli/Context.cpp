@@ -7,15 +7,15 @@
 namespace ply {
 namespace cli {
 
-void Context::run(StringWriter* sw) {
+int Context::run(StringWriter* sw) {
     PLY_ASSERT(m_lastCommand && m_rootCommand);
 
     if (!m_errors.isEmpty() || !m_lastCommand || !m_lastCommand->m_handler.isValid()) {
         printUsage(sw);
-        return;
+        return 1;
     }
 
-    m_lastCommand->m_handler.call(this);
+    return m_lastCommand->m_handler.call(this);
 }
 
 void Context::printUsage(StringWriter* sw) const {

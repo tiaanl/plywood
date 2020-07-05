@@ -63,7 +63,7 @@ protected:
 
 class Command : public BaseDefinition {
 public:
-    using Handler = Functor<void(Context*)>;
+    using Handler = Functor<int(Context*)>;
 
     // This constructor is only public, because HashMap needs to default construct objects on
     // insert.

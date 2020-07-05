@@ -71,7 +71,7 @@ class Context {
 public:
     // TODO: Should we pass StringWriter to run?  What is the purpose other than passing it to
     // printUsage if there is no handlers.
-    void run(StringWriter* sw);
+    int run(StringWriter* sw);
     void printUsage(StringWriter* sw) const;
 
     OptionValue* option(StringView name) const;

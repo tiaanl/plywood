@@ -8,7 +8,7 @@
 #include <web-common/FetchFromFileSystem.h>
 #include <web-common/SourceCode.h>
 #include <web-common/Echo.h>
-#include <ply-cli/Cli.h>
+#include <ply-cli/CommandLine.h>
 
 using namespace ply;
 using namespace web;
@@ -60,47 +60,12 @@ struct CommandLine {
     }
 };
 
-int main(int argc, char* argv[]) {
-    auto cl = cli::CommandLine{"WebServer", "Serve the plywood documentation."};
-    cl.addFlag("help", "Print this help text").shortName("h").defaultValue("false");
-    cl.addFlag("port", "The port used for listening to incoming connections").shortName("p");
-    auto context = cl.parse(argc, argv);
-
-    auto sw = StdOut::createStringWriter();
-    context.printUsage(&sw);
-    sw.flush();
-
-    return 0;
-
+int webServerMain(cli::Context* context) {
     Socket::initialize(IPAddress::V6);
-    String dataRoot;
-    u16 port = 0;
-    CommandLine cmdLine{argc, argv};
-    while (StringView arg = cmdLine.readToken()) {
-        if (arg.startsWith("-")) {
-            if (arg == "-p") {
-                StringView portStr = cmdLine.readToken();
-                if (!portStr) {
-                    writeMsgAndExit(String::format("Expected port number after {}", arg));
-                }
-                u16 p = portStr.to<u16>();
-                if (p == 0) {
-                    writeMsgAndExit(String::format("Invalid port number {}", portStr));
-                }
-                port = p;
-            } else {
-                writeMsgAndExit(String::format("Unrecognized option {}", arg));
-            }
-        } else {
-            if (dataRoot) {
-                writeMsgAndExit("Too many arguments");
-            }
-            if (!FileSystem::native()->isDir(arg)) {
-                writeMsgAndExit(String::format("Can't access directory at {}", arg));
-            }
-            dataRoot = arg;
-        }
-    }
+
+    String dataRoot = context->option("data-root")->value();
+    u16 port = context->option("port")->to<u16>();
+
 #if PLY_TARGET_POSIX
     if (port == 0) {
         if (const char* portCStr = getenv("PORT")) {
@@ -129,8 +94,22 @@ int main(int argc, char* argv[]) {
     allParams.docs.init(dataRoot);
     allParams.sourceCode.rootDir = NativePath::normalize(PLY_WORKSPACE_FOLDER);
     if (!runServer(port, {&allParams, myRequestHandler})) {
-        exit(1);
+        return 1;
     }
     Socket::shutdown();
     return 0;
+}
+
+int main(int argc, char* argv[]) {
+    auto cl = cli::CommandLine{"WebServer", "Serve the plywood documentation."};
+    cl.add(cli::Option{"data-root", "The root directory to serve files from"}
+               .shortName("d")
+               .defaultValue("."));
+    cl.add(cli::Option{"port", "The port used for listening to incoming connections"}
+               .shortName("p")
+               .defaultValue("8080"));
+    cl.handler(webServerMain);
+
+    auto sw = StdOut::createStringWriter();
+    return cl.parse(argc, argv).run(&sw);
 }
