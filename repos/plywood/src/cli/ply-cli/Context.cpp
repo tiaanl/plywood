@@ -95,7 +95,7 @@ void Context::printUsage(StringWriter* sw) const {
     }
 
     if (m_argumentsByIndex.numItems() > 0) {
-        *sw << "\nArguments:\n\n";
+        *sw << "\nArguments:\n";
 
         auto maxWidth = maxWidthOf(
             m_argumentsByIndex, [](auto& value) { return value->m_definition->name().numBytes; });

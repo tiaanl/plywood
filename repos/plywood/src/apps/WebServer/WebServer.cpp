@@ -104,6 +104,5 @@ int main(int argc, char* argv[]) {
     cl.handler(webServerMain);
 
     auto sw = StdOut::createStringWriter();
-    auto context = cl.parse(argc, argv);
-    return context.run(&sw);
+    return cl.parse(argc, argv).run(&sw);
 }
