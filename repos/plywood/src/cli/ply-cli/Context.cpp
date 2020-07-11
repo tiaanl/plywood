@@ -7,6 +7,19 @@
 namespace ply {
 namespace cli {
 
+namespace {
+
+template <typename Iterable, typename Functor>
+u32 maxWidthOf(const Iterable& iterable, Functor functor) {
+    u32 maxWidth = 0;
+    for (auto& it : iterable) {
+        maxWidth = max(functor(it), maxWidth);
+    }
+    return maxWidth;
+}
+
+} // namespace
+
 int Context::run(StringWriter* sw) {
     PLY_ASSERT(m_lastCommand && m_rootCommand);
 
@@ -53,6 +66,11 @@ void Context::printUsage(StringWriter* sw) const {
     if (!children.isEmpty()) {
         *sw << " <command>";
     }
+
+    for (auto& arg : m_argumentsByIndex) {
+        *sw << " <" << arg->m_definition->name() << '>';
+    }
+
     *sw << "\n";
 
     // Available commands
@@ -60,10 +78,8 @@ void Context::printUsage(StringWriter* sw) const {
     if (!children.isEmpty()) {
         *sw << "\nAvailable commands:\n";
 
-        u32 maxWidth = 0;
-        for (auto& child : children) {
-            maxWidth = max(child->m_name.numBytes, maxWidth);
-        }
+        auto maxWidth =
+            maxWidthOf(children, [](Command* command) { return command->name().numBytes; });
         maxWidth += 2;
 
         for (auto& child : children) {
@@ -73,6 +89,25 @@ void Context::printUsage(StringWriter* sw) const {
             }
             if (!child->m_description.isEmpty()) {
                 *sw << child->m_description;
+            }
+            *sw << '\n';
+        }
+    }
+
+    if (m_argumentsByIndex.numItems() > 0) {
+        *sw << "\nArguments:\n\n";
+
+        auto maxWidth = maxWidthOf(
+            m_argumentsByIndex, [](auto& value) { return value->m_definition->name().numBytes; });
+        maxWidth += 2;
+
+        for (auto& arg : m_argumentsByIndex) {
+            *sw << "  " << arg->m_definition->name();
+            for (u32 i = 0; i < maxWidth - arg->m_definition->name().numBytes; ++i) {
+                *sw << ' ';
+            }
+            if (!arg->m_definition->description().isEmpty()) {
+                *sw << arg->m_definition->description();
             }
             *sw << '\n';
         }
@@ -122,9 +157,12 @@ OptionValue* Context::option(StringView name) const {
     return cursor->get();
 }
 
-ArgumentValue* Context::argument(u32 index) const {
-    PLY_UNUSED(index);
-    return nullptr;
+ArgumentValue* Context::argument(StringView name) const {
+    auto cursor = m_argumentsByName.find(name);
+    if (!cursor.wasFound()) {
+        return nullptr;
+    }
+    return cursor->get();
 }
 
 // static
@@ -157,6 +195,13 @@ Context Context::build(Command* rootCommand, ArrayView<const StringView> args) {
     // TODO: Handle the case where there are arguments passed that did not resolve to commands.
 
     result.parseOptions(passedOptions.view());
+    result.parseArguments(passedArguments.view());
+
+    // Assume we consumed every single argument we have in the context.
+    if (passedArguments.numItems() > result.m_argumentsByIndex.numItems()) {
+        auto leftOver = passedArguments.subView(result.m_argumentsByIndex.numItems());
+        passedArguments = leftOver;
+    }
 
     return result;
 }
@@ -178,6 +223,16 @@ void Context::append(Command* command) {
         auto shortNameCursor = m_optionsByShortName.insertOrFind(option.shortName());
         PLY_ASSERT(!shortNameCursor.wasFound());
         *shortNameCursor = nameCursor->borrow();
+    }
+
+    for (auto& arg : command->m_arguments) {
+        auto value = Owned<ArgumentValue>::create(&arg);
+
+        auto nameCursor = m_argumentsByName.insertOrFind(arg.name());
+        PLY_ASSERT(!nameCursor.wasFound());
+        *nameCursor = std::move(value);
+
+        m_argumentsByIndex.append(nameCursor->borrow());
     }
 }
 
@@ -212,6 +267,14 @@ void Context::parseOptions(ArrayView<StringView> options) {
 
         optionValue->m_value = valuePart;
         optionValue->m_present = true;
+    }
+}
+
+void Context::parseArguments(ArrayView<StringView> arguments) {
+    for (u32 argIndex = 0; argIndex < min(arguments.numItems, m_argumentsByIndex.numItems());
+         ++argIndex) {
+        auto& arg = m_argumentsByIndex[argIndex];
+        arg->m_value = arguments[argIndex];
     }
 }
 

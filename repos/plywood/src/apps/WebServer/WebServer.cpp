@@ -63,7 +63,7 @@ struct CommandLine {
 int webServerMain(cli::Context* context) {
     Socket::initialize(IPAddress::V6);
 
-    String dataRoot = context->option("data-root")->value();
+    StringView dataRoot = context->argument("data-root")->value();
     u16 port = context->option("port")->to<u16>();
 
 #if PLY_TARGET_POSIX
@@ -82,12 +82,6 @@ int webServerMain(cli::Context* context) {
         }
     }
 #endif
-    if (port == 0) {
-        port = WEBSERVER_DEFAULT_PORT;
-    }
-    if (!dataRoot) {
-        dataRoot = WEBSERVER_DEFAULT_DOC_DIR;
-    }
     StdOut::createStringWriter().format("Serving from {} on port {}\n", dataRoot, port);
     AllParams allParams;
     allParams.fileSys.rootDir = dataRoot;
@@ -102,14 +96,14 @@ int webServerMain(cli::Context* context) {
 
 int main(int argc, char* argv[]) {
     auto cl = cli::CommandLine{"WebServer", "Serve the plywood documentation."};
-    cl.add(cli::Option{"data-root", "The root directory to serve files from"}
-               .shortName("d")
-               .defaultValue("."));
     cl.add(cli::Option{"port", "The port used for listening to incoming connections"}
                .shortName("p")
-               .defaultValue("8080"));
+               .defaultValue(String::from(WEBSERVER_DEFAULT_PORT)));
+    cl.add(cli::Argument{"data-root", "The root directory to serve files from"}.defaultValue(
+        WEBSERVER_DEFAULT_DOC_DIR));
     cl.handler(webServerMain);
 
     auto sw = StdOut::createStringWriter();
-    return cl.parse(argc, argv).run(&sw);
+    auto context = cl.parse(argc, argv);
+    return context.run(&sw);
 }

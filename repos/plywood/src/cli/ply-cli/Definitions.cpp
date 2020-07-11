@@ -17,6 +17,11 @@ Command& Command::add(Option option) {
     return *this;
 }
 
+Command& Command::add(Argument argument) {
+    m_arguments.append(std::move(argument));
+    return *this;
+}
+
 Command& Command::add(Command command) {
     auto cursor = m_subCommands.insertOrFind(command.name());
     PLY_ASSERT(!cursor.wasFound());

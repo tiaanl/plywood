@@ -44,11 +44,15 @@ private:
 
 class ArgumentValue {
 public:
-    ArgumentValue() : m_value{}, m_present{false} {
+    ArgumentValue() : m_definition{nullptr}, m_value{}, m_present{false} {
+    }
+
+    explicit ArgumentValue(Argument* definition)
+        : m_definition{definition}, m_value{}, m_present{false} {
     }
 
     StringView value() const {
-        return m_value;
+        return m_value.isEmpty() ? m_definition->defaultValue() : m_value.view();
     }
 
     template <typename T>
@@ -63,6 +67,7 @@ public:
 private:
     friend class Context;
 
+    Argument* m_definition;
     String m_value;
     bool m_present = false;
 };
@@ -75,7 +80,7 @@ public:
     void printUsage(StringWriter* sw) const;
 
     OptionValue* option(StringView name) const;
-    ArgumentValue* argument(u32 index) const;
+    ArgumentValue* argument(StringView name) const;
 
 private:
     friend class cli::CommandLine;
@@ -99,12 +104,22 @@ private:
         }
     };
 
+    struct ArgumentsByNameTraits {
+        using Key = StringView;
+        using Item = Owned<ArgumentValue>;
+
+        static Key comparand(const Item& item) {
+            return item->m_definition->name();
+        }
+    };
+
     static Context build(Command* rootCommand, ArrayView<const StringView> args);
 
     explicit Context(Command* rootCommand);
 
     void append(Command* command);
     void parseOptions(ArrayView<StringView> options);
+    void parseArguments(ArrayView<StringView> arguments);
 
     Command* m_rootCommand;
     Command* m_lastCommand;
@@ -113,6 +128,8 @@ private:
 
     HashMap<OptionsByNameTraits> m_optionsByName;
     HashMap<OptionsByShortNameTraits> m_optionsByShortName;
+    HashMap<ArgumentsByNameTraits> m_argumentsByName;
+    Array<Borrowed<ArgumentValue>> m_argumentsByIndex;
 
     Array<String> m_errors;
 };

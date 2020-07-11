@@ -61,6 +61,24 @@ protected:
     String m_defaultValue;
 };
 
+class Argument : public BaseDefinition {
+public:
+    Argument(StringView name, StringView description) : BaseDefinition{name, description} {
+    }
+
+    StringView defaultValue() const {
+        return m_defaultValue;
+    }
+
+    Argument& defaultValue(StringView defaultValue) {
+        m_defaultValue = defaultValue;
+        return *this;
+    }
+
+private:
+    String m_defaultValue;
+};
+
 class Command : public BaseDefinition {
 public:
     using Handler = Functor<int(Context*)>;
@@ -75,6 +93,7 @@ public:
 
     Command& handler(Handler handle);
     Command& add(Option option);
+    Command& add(Argument argument);
     Command& add(Command command);
 
     Command* findCommand(StringView name) const;
@@ -93,6 +112,7 @@ private:
 
     Handler m_handler;
     Array<Option> m_options;
+    Array<Argument> m_arguments;
     HashMap<SubCommandsTraits> m_subCommands;
 };
 
