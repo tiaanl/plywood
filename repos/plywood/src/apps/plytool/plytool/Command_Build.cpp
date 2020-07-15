@@ -12,21 +12,26 @@
 
 namespace ply {
 
-bool command_build(PlyToolCommandEnv* env) {
+s32 build_handler(PlyToolCommandEnv* env) {
     using namespace build;
 
     BuildParams buildParams;
-    buildParams.targetName = env->cl->readToken();
-    ensureTerminated(env->cl);
-    buildParams.extractOptions(env);
-    env->cl->finalize();
+    buildParams.extractOptions(env->context);
 
     PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
     PLY_SET_IN_SCOPE(ExternFolderRegistry::instance_, ExternFolderRegistry::create());
     PLY_SET_IN_SCOPE(HostTools::instance_, HostTools::create());
 
     BuildParams::Result buildResult;
-    return buildParams.exec(&buildResult, env, true);
+    return buildParams.exec(&buildResult, env, true) ? 0 : 1;
+}
+
+void buildCommand_build(cli::Command* root, PlyToolCommandEnv* env) {
+    cli::Command cmd{"build", "Build the specified target in the current build folder."};
+    BuildParams::addCommandLineOptions(&cmd);
+    cmd.handler(wrapHandler(env, build_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

@@ -13,60 +13,57 @@
 
 namespace ply {
 
-void command_module(PlyToolCommandEnv* env) {
+s32 module_listHandler(PlyToolCommandEnv* env) {
     using namespace build;
 
-    StringView cmd = env->cl->readToken();
-    if (cmd.isEmpty()) {
-        ensureTerminated(env->cl);
-        env->cl->finalize();
+    PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
 
-        auto sw = StdErr::createStringWriter();
-        printUsage(&sw, "module",
-                   {
-                       {"list", "list description"},
-                       {"update", "update description"},
-                   });
-
-        return;
+    StringWriter sw = StdOut::createStringWriter();
+    Array<const Repo*> repos;
+    for (const Repo* repo : RepoRegistry::get()->repos) {
+        repos.append(repo);
     }
-
-    if (prefixMatch(cmd, "list")) {
-        ensureTerminated(env->cl);
-        env->cl->finalize();
-
-        PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
-
-        StringWriter sw = StdOut::createStringWriter();
-        Array<const Repo*> repos;
-        for (const Repo* repo : RepoRegistry::get()->repos) {
-            repos.append(repo);
+    sort(repos.view(), [](const Repo* a, const Repo* b) { //
+        return a->repoName < b->repoName;
+    });
+    for (const Repo* repo : repos) {
+        sw.format("Modules in repo '{}':\n", repo->repoName);
+        Array<TargetInstantiator*> targetInsts;
+        for (TargetInstantiator* targetInst : repo->targetInstantiators) {
+            targetInsts.append(targetInst);
         }
-        sort(repos.view(), [](const Repo* a, const Repo* b) { //
-            return a->repoName < b->repoName;
+        sort(targetInsts.view(), [](const TargetInstantiator* a, const TargetInstantiator* b) {
+            return a->name < b->name;
         });
-        for (const Repo* repo : repos) {
-            sw.format("Modules in repo '{}':\n", repo->repoName);
-            Array<TargetInstantiator*> targetInsts;
-            for (TargetInstantiator* targetInst : repo->targetInstantiators) {
-                targetInsts.append(targetInst);
-            }
-            sort(targetInsts.view(), [](const TargetInstantiator* a, const TargetInstantiator* b) {
-                return a->name < b->name;
-            });
-            for (TargetInstantiator* targetInst : targetInsts) {
-                sw.format("    {}\n", targetInst->name);
-            }
-            sw << "\n";
+        for (TargetInstantiator* targetInst : targetInsts) {
+            sw.format("    {}\n", targetInst->name);
         }
-    } else if (prefixMatch(cmd, "update")) {
-        ensureTerminated(env->cl);
-        env->cl->finalize();
-
-        buildInstantiatorDLLs(true);
-    } else {
-        fatalError(String::format("Unrecognized module command \"{}\"", cmd));
+        sw << "\n";
     }
+
+    return 0;
+}
+
+s32 module_updateHandler(PlyToolCommandEnv* env) {
+    using namespace build;
+
+    buildInstantiatorDLLs(true);
+
+    return 0;
+}
+
+void buildCommand_module(cli::Command* root, PlyToolCommandEnv* env) {
+    cli::Command listCmd{"list", "List all the modules available in the workspace."};
+    listCmd.handler(wrapHandler(env, module_listHandler));
+
+    cli::Command updateCmd{"update", "Update the module registry for the workspace."};
+    updateCmd.handler(wrapHandler(env, module_updateHandler));
+
+    cli::Command cmd{"module", "Manage modules in the workspace."};
+    cmd.add(std::move(listCmd));
+    cmd.add(std::move(updateCmd));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

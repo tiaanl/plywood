@@ -64,7 +64,7 @@ PLY_NO_INLINE void buildAndRun(const tool::Command::Type::Run& runCmd) {
     }
 }
 
-PLY_NO_INLINE void command_rpc(PlyToolCommandEnv*) {
+PLY_NO_INLINE s32 rpc_handler(PlyToolCommandEnv*) {
     InStream ins = StdIn::createStream();
     RegistryTypeResolver resolver;
     resolver.add(TypeResolver<tool::Command>::get());
@@ -90,6 +90,15 @@ PLY_NO_INLINE void command_rpc(PlyToolCommandEnv*) {
             }
         }
     }
+
+    return 0;
+}
+
+void buildCommand_rpc(cli::Command* root, PlyToolCommandEnv* env) {
+    auto cmd = cli::Command{"rpc", "RPC?"};
+    cmd.handler(wrapHandler(env, rpc_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

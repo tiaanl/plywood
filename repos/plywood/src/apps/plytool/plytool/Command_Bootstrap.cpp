@@ -11,10 +11,8 @@
 
 namespace ply {
 
-void command_bootstrap(PlyToolCommandEnv* env) {
+s32 bootstrap_handler(PlyToolCommandEnv* env) {
     using namespace build;
-    ensureTerminated(env->cl);
-    env->cl->finalize();
 
     PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
     PLY_SET_IN_SCOPE(ExternFolderRegistry::instance_, ExternFolderRegistry::create());
@@ -23,7 +21,7 @@ void command_bootstrap(PlyToolCommandEnv* env) {
         RepoRegistry::get()->findTargetInstantiator("plywood.plytool");
     if (!target) {
         StdErr::createStringWriter() << "Error: Can't find 'plytool' module in 'plywood' repo.\n";
-        return;
+        return 1;
     }
 
     Owned<BuildFolder> buildFolder = BuildFolder::create({}, "plytool");
@@ -31,13 +29,13 @@ void command_bootstrap(PlyToolCommandEnv* env) {
     buildFolder->makeShared.append("plywood.plytool");
     ProjectInstantiationResult instResult = buildFolder->instantiateAllTargets(true);
     if (!instResult.isValid) {
-        return;
+        return 1;
     }
     if (instResult.unselectedExterns.numItems() > 0 ||
         instResult.uninstalledProviders.numItems() > 0) {
         StdErr::createStringWriter()
             << "Error: Bootstrap file must not have external dependencies.\n";
-        return;
+        return 1;
     }
 
     StringWriter sw;
@@ -54,6 +52,15 @@ void command_bootstrap(PlyToolCommandEnv* env) {
     } else {
         StdErr::createStringWriter().format("Error writing bootstrap file '{}'.\n", savePath);
     }
+
+    return 0;
+}
+
+void buildCommand_bootstrap(cli::Command* root, PlyToolCommandEnv* env) {
+    auto cmd = cli::Command{"boostrap", "Bootstrap the build files for plytool."};
+    cmd.handler(wrapHandler(env, bootstrap_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

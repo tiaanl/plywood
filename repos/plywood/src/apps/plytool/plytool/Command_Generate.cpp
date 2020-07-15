@@ -11,25 +11,31 @@
 
 namespace ply {
 
-bool command_generate(PlyToolCommandEnv* env) {
+s32 generate_handler(PlyToolCommandEnv* env) {
     using namespace build;
     if (!env->currentBuildFolder) {
         fatalError("Current build folder not set");
     }
 
-    ensureTerminated(env->cl);
-    StringView configName =
-        env->cl->checkForSkippedOpt([](StringView arg) { return arg.startsWith("--config="); });
-    if (configName) {
-        configName = configName.subStr(9);
+    StringView configName;
+    auto configOption = env->context->option("config");
+    if (configOption) {
+        configName = configOption->value();
     }
-    env->cl->finalize();
 
     PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
     PLY_SET_IN_SCOPE(ExternFolderRegistry::instance_, ExternFolderRegistry::create());
     PLY_SET_IN_SCOPE(HostTools::instance_, HostTools::create());
 
-    return env->currentBuildFolder->generateLoop(configName);
+    return env->currentBuildFolder->generateLoop(configName) ? 0 : 1;
+}
+
+void buildCommand_generate(cli::Command* root, PlyToolCommandEnv* env) {
+    cli::Command cmd{"generate", "Generate the build environment for the current build folder"};
+    cmd.add(cli::Option{"config", "The configuration to use"});
+    cmd.handler(wrapHandler(env, generate_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

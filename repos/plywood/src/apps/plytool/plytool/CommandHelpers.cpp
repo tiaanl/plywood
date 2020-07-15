@@ -4,7 +4,6 @@
 ------------------------------------*/
 #include <Core.h>
 #include <CommandHelpers.h>
-#include <ConsoleUtils.h>
 #include <ply-runtime/algorithm/Find.h>
 #include <ply-build-folder/BuildFolder.h>
 #include <ply-build-repo/ProjectInstantiator.h>
@@ -13,8 +12,11 @@
 
 namespace ply {
 
-void AddParams::extractOptions(CommandLine* cl) {
-    this->makeShared = cl->checkForSkippedOpt("--shared");
+void AddParams::extractOptions(cli::Context* context) {
+    auto sharedOption = context->option("shared");
+    if (sharedOption) {
+        this->makeShared = sharedOption->isPresent();
+    }
 }
 
 bool AddParams::exec(build::BuildFolder* folder, StringView fullTargetName) {
@@ -34,17 +36,39 @@ bool AddParams::exec(build::BuildFolder* folder, StringView fullTargetName) {
     return anyChange;
 }
 
-void BuildParams::extractOptions(PlyToolCommandEnv* env) {
-    this->configName =
-        env->cl->checkForSkippedOpt([](StringView arg) { return arg.startsWith("--config="); });
-    if (this->configName) {
-        this->configName = this->configName.subStr(9);
+// static
+void BuildParams::addCommandLineOptions(cli::Command* command) {
+    // TODO: Add descriptions for these options.
+    command->add(cli::Option{"config", ""});
+    command->add(cli::Option{"add", ""});
+    command->add(cli::Option{"auto", ""});
+    command->add(cli::Option{"shared", ""});
+    command->add(cli::Argument{"target", "The target to build"});
+}
+
+void BuildParams::extractOptions(cli::Context* context) {
+    auto configOption = context->option("config");
+    if (configOption) {
+        this->configName = configOption->value();
     }
 
-    this->doAdd = env->cl->checkForSkippedOpt("--add");
-    this->doAuto = env->cl->checkForSkippedOpt("--auto");
+    auto doAddOption = context->option("add");
+    if (doAddOption) {
+        this->doAdd = doAddOption->isPresent();
+    }
+
+    auto autoOption = context->option("auto");
+    if (autoOption) {
+        this->doAuto = autoOption->isPresent();
+    }
+
     if (this->doAdd || this->doAuto) {
-        this->addParams.extractOptions(env->cl);
+        this->addParams.extractOptions(context);
+    }
+
+    auto targetArg = context->argument("target");
+    if (targetArg) {
+        this->targetName = targetArg->value();
     }
 }
 

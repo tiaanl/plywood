@@ -5,6 +5,7 @@
 #pragma once
 #include <Core.h>
 #include <WorkspaceSettings.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 
@@ -36,6 +37,7 @@ struct CommandLine {
 
 struct PlyToolCommandEnv {
     CommandLine* cl = nullptr;
+    cli::Context* context = nullptr;
     WorkspaceSettings* workspace = nullptr;
     Array<Owned<build::BuildFolder>> buildFolders;
     build::BuildFolder* currentBuildFolder = nullptr;
@@ -54,5 +56,16 @@ using CommandList = ArrayView<const CommandDescription>;
 
 void printUsage(StringWriter* sw, CommandList commands);
 void printUsage(StringWriter* sw, StringView command, CommandList commands = {});
+
+auto wrapHandler(PlyToolCommandEnv* env, Functor<s32(PlyToolCommandEnv*)> handler) {
+    return [env, &handler](cli::Context* context) {
+        env->context = context;
+        if (handler.isValid()) {
+            return handler.call(env);
+        }
+
+        return 1;
+    };
+}
 
 } // namespace ply

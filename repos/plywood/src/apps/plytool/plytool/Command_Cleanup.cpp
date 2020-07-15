@@ -96,15 +96,22 @@ void cleanupRepo(StringView repoPath, StringView desiredHeader, StringView clang
     }
 }
 
-void command_cleanup(PlyToolCommandEnv* env) {
-    ensureTerminated(env->cl);
-    env->cl->finalize();
+s32 cleanup_handler(PlyToolCommandEnv* env) {
     StringView desiredHeader = R"(/*------------------------------------
   ///\  Plywood C++ Framework
   \\\/  https://plywood.arc80.com/
 ------------------------------------*/
 )";
     cleanupRepo(NativePath::join(PLY_WORKSPACE_FOLDER, "repos/plywood/src"), desiredHeader);
+
+    return 0;
+}
+
+void buildCommand_cleanup(cli::Command* root, PlyToolCommandEnv* env) {
+    auto cmd = cli::Command{"cleanup", "Clean up repository"};
+    cmd.handler(wrapHandler(env, cleanup_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

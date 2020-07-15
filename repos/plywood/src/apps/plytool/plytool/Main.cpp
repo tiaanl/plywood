@@ -11,18 +11,18 @@
 
 namespace ply {
 
-void command_rpc(PlyToolCommandEnv* env);
-void command_folder(PlyToolCommandEnv* env);
-void command_target(PlyToolCommandEnv* env);
-void command_module(PlyToolCommandEnv* env);
-void command_extern(PlyToolCommandEnv* env);
-bool command_generate(PlyToolCommandEnv* env);
-bool command_build(PlyToolCommandEnv* env);
-void command_codegen(PlyToolCommandEnv* env);
-void command_bootstrap(PlyToolCommandEnv* env);
-void command_cleanup(PlyToolCommandEnv* env);
-s32 command_run(PlyToolCommandEnv* env);
-bool command_open(PlyToolCommandEnv* env);
+void buildCommand_rpc(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_cleanup(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_open(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_bootstrap(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_run(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_build(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_generate(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_codegen(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_folder(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_extern(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_module(cli::Command* root, PlyToolCommandEnv* env);
+void buildCommand_target(cli::Command* root, PlyToolCommandEnv* env);
 
 } // namespace ply
 
@@ -56,6 +56,20 @@ int main(int argc, char* argv[]) {
     env.cl = &cl;
     env.workspace = &workspace;
 
+    cli::CommandLine commandLine{"plytool", "Plytool manages a Plywood workspace."};
+    buildCommand_rpc(&commandLine, &env);
+    buildCommand_cleanup(&commandLine, &env);
+    buildCommand_bootstrap(&commandLine, &env);
+    buildCommand_open(&commandLine, &env);
+    buildCommand_build(&commandLine, &env);
+    buildCommand_run(&commandLine, &env);
+    buildCommand_generate(&commandLine, &env);
+    buildCommand_folder(&commandLine, &env);
+    buildCommand_extern(&commandLine, &env);
+    buildCommand_module(&commandLine, &env);
+    buildCommand_target(&commandLine, &env);
+    auto context = commandLine.parse(argc, argv);
+
     // FIXME: Only call getBuildFolders when really needed
     env.buildFolders = build::BuildFolder::getList();
     s32 defaultIndex = find(env.buildFolders.view(), [&](const build::BuildFolder* bf) {
@@ -65,6 +79,12 @@ int main(int argc, char* argv[]) {
         env.currentBuildFolder = env.buildFolders[defaultIndex];
     }
 
+    auto sw = StdOut::createStringWriter();
+    return context.run(&sw);
+    // context.printUsage(&sw);
+    // return 0;
+
+#if 0
     StringView category = cl.readToken();
     bool success = true;
     if (category.isEmpty()) {
@@ -105,5 +125,7 @@ int main(int argc, char* argv[]) {
     } else {
         fatalError(String::format("Unrecognized command \"{}\"", category));
     }
+
     return success ? 0 : 1;
+#endif // 0
 }

@@ -14,11 +14,8 @@
 
 namespace ply {
 
-bool command_open(PlyToolCommandEnv* env) {
+s32 open_handler(PlyToolCommandEnv* env) {
     using namespace build;
-
-    ensureTerminated(env->cl);
-    env->cl->finalize();
 
     const BuildFolder* folder = env->currentBuildFolder;
     if (!folder) {
@@ -49,7 +46,7 @@ bool command_open(PlyToolCommandEnv* env) {
         if (CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) != S_OK) {
             fatalError("Unable to initialize COM");
         }
-        return ((sptr) ShellExecuteW(NULL, L"open", wstr, NULL, NULL, SW_SHOWNORMAL) > 32);
+        return ((sptr) ShellExecuteW(NULL, L"open", wstr, NULL, NULL, SW_SHOWNORMAL) > 32) ? 0 : 1;
 #endif // PLY_TARGET_WIN32
 #if PLY_TARGET_APPLE
     } else if (folder->cmakeOptions.generator == "Xcode") {
@@ -65,13 +62,20 @@ bool command_open(PlyToolCommandEnv* env) {
         if (!sub) {
             fatalError("Unable to open IDE using 'open'");
         }
-        return sub->join() == 0;
+        return (sub->join() == 0) ? 0 : 1;
 #endif // PLY_TARGET_APPLE
     }
 
     fatalError(String::format("Don't know how to open IDE for generator '{}'",
                               folder->cmakeOptions.generator));
-    return false;
+    return 1;
+}
+
+void buildCommand_open(cli::Command* root, PlyToolCommandEnv* env) {
+    cli::Command cmd{"open", "Open the build environment for the current build folder"};
+    cmd.handler(wrapHandler(env, open_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

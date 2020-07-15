@@ -221,7 +221,7 @@ void Context::append(Command* command) {
         *nameCursor = std::move(optionValue);
 
         auto shortNameCursor = m_optionsByShortName.insertOrFind(option.shortName());
-        PLY_ASSERT(!shortNameCursor.wasFound());
+        // We allow short names not existing, because short names are optional.
         *shortNameCursor = nameCursor->borrow();
     }
 

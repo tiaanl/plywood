@@ -13,18 +13,13 @@
 
 namespace ply {
 
-s32 command_run(PlyToolCommandEnv* env) {
+s32 run_handler(PlyToolCommandEnv* env) {
     using namespace build;
 
     BuildParams buildParams;
-    buildParams.targetName = env->cl->readToken();
-    ensureTerminated(env->cl);
-    buildParams.extractOptions(env);
-    bool doBuild = true;
-    if (env->cl->checkForSkippedOpt("--nobuild")) {
-        doBuild = false;
-    }
-    env->cl->finalize();
+    buildParams.extractOptions(env->context);
+
+    bool doBuild = env->context->option("nobuild")->isPresent();
 
     PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
     PLY_SET_IN_SCOPE(ExternFolderRegistry::instance_, ExternFolderRegistry::create());
@@ -49,6 +44,15 @@ s32 command_run(PlyToolCommandEnv* env) {
     StdOut::createStringWriter().format("Running '{}'...\n", exePath);
     Owned<Subprocess> child = Subprocess::exec(exePath, {}, {}, Subprocess::Output::inherit());
     return child->join();
+}
+
+void buildCommand_run(cli::Command* root, PlyToolCommandEnv* env) {
+    cli::Command cmd{"run", "Run the executable build target of the current build folder."};
+    cmd.add(cli::Option{"nobuild", "Do not build before running the target"});
+    BuildParams::addCommandLineOptions(&cmd);
+    cmd.handler(wrapHandler(env, run_handler));
+
+    root->add(std::move(cmd));
 }
 
 } // namespace ply

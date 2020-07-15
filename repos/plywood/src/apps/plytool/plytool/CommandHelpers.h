@@ -16,7 +16,7 @@ struct BuildFolder;
 struct AddParams {
     bool makeShared = false;
 
-    void extractOptions(CommandLine* cl);
+    void extractOptions(cli::Context* context);
     bool exec(build::BuildFolder* folder, StringView fullTargetName);
 };
 
@@ -34,7 +34,8 @@ struct BuildParams {
         build::BuildFolder* folder = nullptr;
     };
 
-    void extractOptions(PlyToolCommandEnv* env);
+    static void addCommandLineOptions(cli::Command* command);
+    void extractOptions(cli::Context* context);
     bool exec(Result* result, PlyToolCommandEnv* env, bool doBuild);
 };
 
