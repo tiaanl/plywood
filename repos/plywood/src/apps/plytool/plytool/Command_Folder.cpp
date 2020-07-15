@@ -7,6 +7,7 @@
 #include <ply-build-folder/BuildFolder.h>
 #include <ply-build-repo/ProjectInstantiator.h>
 #include <ply-runtime/algorithm/Find.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 

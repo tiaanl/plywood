@@ -13,6 +13,10 @@ namespace build {
 struct BuildFolder;
 } // namespace build
 
+namespace cli {
+class Command;
+} // namespace cli
+
 struct AddParams {
     bool makeShared = false;
 

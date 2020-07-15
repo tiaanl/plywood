@@ -8,6 +8,7 @@
 #include <ply-build-repo/RepoRegistry.h>
 #include <ply-build-provider/ExternFolderRegistry.h>
 #include <ply-build-provider/HostTools.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 

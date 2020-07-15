@@ -7,13 +7,13 @@
 #include <ply-build-folder/BuildFolder.h>
 #include <ply-build-repo/Repo.h>
 #include <ply-build-repo/RepoRegistry.h>
-#include <ply-runtime/algorithm/Find.h>
 #include <ply-runtime/algorithm/Sort.h>
 #include <ply-build-repo/BuildInstantiatorDLLs.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 
-s32 module_listHandler(PlyToolCommandEnv* env) {
+s32 module_listHandler(PlyToolCommandEnv*) {
     using namespace build;
 
     PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());
@@ -44,7 +44,7 @@ s32 module_listHandler(PlyToolCommandEnv* env) {
     return 0;
 }
 
-s32 module_updateHandler(PlyToolCommandEnv* env) {
+s32 module_updateHandler(PlyToolCommandEnv*) {
     using namespace build;
 
     buildInstantiatorDLLs(true);

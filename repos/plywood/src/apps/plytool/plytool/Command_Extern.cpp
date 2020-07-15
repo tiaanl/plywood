@@ -9,6 +9,7 @@
 #include <ply-build-repo/ProjectInstantiator.h>
 #include <ply-build-provider/HostTools.h>
 #include <ply-build-provider/ExternFolderRegistry.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 
@@ -62,11 +63,6 @@ void installProvider(PlyToolCommandEnv* env, const build::ExternProvider* provid
             break;
         }
     }
-}
-
-s32 extern_externHandler(PlyToolCommandEnv* env) {
-    using namespace build;
-    return 0;
 }
 
 s32 extern_listHandler(PlyToolCommandEnv* env) {
@@ -173,6 +169,7 @@ s32 extern_selectHandler(PlyToolCommandEnv* env) {
     const ExternProvider* provider = RepoRegistry::get()->getExternProvider(qualifiedName);
     if (!provider) {
         fatalError("Provider not found");
+        return 1;
     }
 
     if (shouldInstall) {

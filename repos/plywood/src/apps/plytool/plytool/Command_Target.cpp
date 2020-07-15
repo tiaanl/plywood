@@ -10,7 +10,7 @@
 #include <ply-build-provider/ExternFolderRegistry.h>
 #include <ply-build-provider/HostTools.h>
 #include <ply-runtime/algorithm/Find.h>
-#include <ply-build-repo/ProjectInstantiator.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 

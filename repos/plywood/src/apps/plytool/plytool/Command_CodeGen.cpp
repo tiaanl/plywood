@@ -4,11 +4,9 @@
 ------------------------------------*/
 #include <Core.h>
 #include <ply-cpp/Parser.h>
-#include <ply-cpp/Preprocessor.h>
-#include <ply-cpp/PPVisitedFiles.h>
-#include <ply-runtime/io/text/TextFormat.h>
 #include <ply-runtime/algorithm/Find.h>
 #include <ply-runtime/algorithm/Sort.h>
+#include <ply-cli/CommandLine.h>
 #include <ReflectionHooks.h>
 #include <ConsoleUtils.h>
 
@@ -200,7 +198,7 @@ void generateAllCppInls(cpp::ReflectionInfoAggregator* agg) {
     }
 }
 
-s32 codegen_handler(PlyToolCommandEnv* env) {
+s32 codegen_handler(PlyToolCommandEnv*) {
     cpp::ReflectionInfoAggregator agg;
 
     u32 fileNum = 0;

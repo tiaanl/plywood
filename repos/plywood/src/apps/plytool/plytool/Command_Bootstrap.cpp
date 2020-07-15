@@ -8,10 +8,11 @@
 #include <ply-build-repo/ProjectInstantiator.h>
 #include <ply-build-provider/ExternFolderRegistry.h>
 #include <ply-build-folder/BuildFolder.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 
-s32 bootstrap_handler(PlyToolCommandEnv* env) {
+s32 bootstrap_handler(PlyToolCommandEnv*) {
     using namespace build;
 
     PLY_SET_IN_SCOPE(RepoRegistry::instance_, RepoRegistry::create());

@@ -6,9 +6,9 @@
 #include <CommandHelpers.h>
 #include <ply-runtime/algorithm/Find.h>
 #include <ply-build-folder/BuildFolder.h>
-#include <ply-build-repo/ProjectInstantiator.h>
 #include <ply-build-repo/RepoRegistry.h>
 #include <ply-build-target/BuildTarget.h>
+#include <ply-cli/Context.h>
 
 namespace ply {
 

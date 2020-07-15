@@ -5,6 +5,7 @@
 #include <Core.h>
 #include <ConsoleUtils.h>
 #include <ply-build-folder/BuildFolder.h>
+#include <ply-cli/CommandLine.h>
 #include <ply-runtime/io/text/TextConverter.h>
 
 #if PLY_TARGET_WIN32
@@ -20,6 +21,7 @@ s32 open_handler(PlyToolCommandEnv* env) {
     const BuildFolder* folder = env->currentBuildFolder;
     if (!folder) {
         fatalError("Current build folder not set");
+        return 1;
     }
 
     if (folder->cmakeOptions.generator == "Unix Makefiles") {

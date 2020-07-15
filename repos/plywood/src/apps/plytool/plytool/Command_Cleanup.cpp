@@ -6,6 +6,7 @@
 #include <ConsoleUtils.h>
 #include <ply-cpp/Preprocessor.h>
 #include <ply-cpp/ErrorFormatting.h>
+#include <ply-cli/CommandLine.h>
 
 namespace ply {
 
@@ -96,7 +97,7 @@ void cleanupRepo(StringView repoPath, StringView desiredHeader, StringView clang
     }
 }
 
-s32 cleanup_handler(PlyToolCommandEnv* env) {
+s32 cleanup_handler(PlyToolCommandEnv*) {
     StringView desiredHeader = R"(/*------------------------------------
   ///\  Plywood C++ Framework
   \\\/  https://plywood.arc80.com/
