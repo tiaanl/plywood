@@ -51,6 +51,14 @@ Command* Command::findCommand(StringView name) const {
     return nullptr;
 }
 
+s32 Command::run(Context* context) {
+    if (m_handler.isValid()) {
+        return m_handler.call(context);
+    }
+
+    return 1;
+}
+
 Command& Command::subCommandInternal(Command&& command) {
     auto cursor = m_subCommands.insertOrFind(command.name());
     PLY_ASSERT(!cursor.wasFound());

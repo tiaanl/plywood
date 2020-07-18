@@ -91,18 +91,41 @@ public:
     Command(StringView name, StringView description) : BaseDefinition{name, description} {
     }
 
+    /*!
+    Set the handler for this command.
+    */
     void handler(Handler handle);
 
+    /*!
+    \beginGroup
+    Add an option to this command.
+    */
     Option& option(StringView name, StringView description);
     void option(Option option);
 
+    /*!
+    \beginGroup
+    Add an argument to this command.
+    */
     Argument& argument(StringView name, StringView description);
     void argument(Argument argument);
 
+    /*!
+    \beginGroup
+    Add a sub command to this command.
+    */
     Command& subCommand(StringView name, StringView description, Functor<void(Command&)> init);
     void subCommand(Command command);
 
+    /*!
+    Returns a sub command with the specified name, otherwise nullptr.
+    */
     Command* findCommand(StringView name) const;
+
+    /*!
+    Run the command's handler if it is valid, otherwise return 1.
+    */
+    s32 run(Context* context);
 
 private:
     friend class Context;

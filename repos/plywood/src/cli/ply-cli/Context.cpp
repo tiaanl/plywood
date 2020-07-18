@@ -23,12 +23,12 @@ u32 maxWidthOf(const Iterable& iterable, Functor functor) {
 int Context::run(StringWriter* sw) {
     PLY_ASSERT(m_lastCommand && m_rootCommand);
 
-    if (!m_errors.isEmpty() || !m_lastCommand || !m_lastCommand->m_handler.isValid()) {
+    if (!m_errors.isEmpty() || !m_lastCommand) {
         printUsage(sw);
         return 1;
     }
 
-    return m_lastCommand->m_handler.call(this);
+    return m_lastCommand->run(this);
 }
 
 void Context::printUsage(StringWriter* sw) const {
