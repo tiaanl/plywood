@@ -13,7 +13,7 @@ Context CommandLine::parse(int argc, char* argv[]) {
 }
 
 Context CommandLine::parse(ArrayView<const StringView> args) {
-    return Context::build(this, args);
+    return Context::build(*this, args);
 }
 
 } // namespace cli

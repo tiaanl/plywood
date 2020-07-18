@@ -42,16 +42,16 @@ void Command::subCommand(Command command) {
     subCommandInternal(std::move(command));
 }
 
-Command* Command::findCommand(StringView name) const {
+Borrowed<Command> Command::findCommand(StringView name) const {
     auto cursor = m_subCommands.find(name);
     if (cursor.wasFound()) {
-        return cursor->get();
+        return cursor->borrow();
     }
 
-    return nullptr;
+    return {};
 }
 
-s32 Command::run(Context* context) {
+s32 Command::run(Context* context) const {
     if (m_handler.isValid()) {
         return m_handler.call(context);
     }

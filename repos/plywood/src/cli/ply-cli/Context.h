@@ -113,18 +113,18 @@ private:
         }
     };
 
-    static Context build(Command* rootCommand, ArrayView<const StringView> args);
+    static Context build(const Command& rootCommand, ArrayView<const StringView> args);
 
-    explicit Context(Command* rootCommand);
+    explicit Context(const Command& rootCommand);
 
-    void append(Command* command);
+    void mergeCommand(const Command& command);
     void parseOptions(ArrayView<StringView> options);
     void parseArguments(ArrayView<StringView> arguments);
 
-    Command* m_rootCommand;
-    Command* m_lastCommand;
+    Borrowed<const Command> m_rootCommand;
+    Borrowed<const Command> m_lastCommand;
 
-    Array<Command*> m_passedCommands;
+    Array<Borrowed<Command>> m_passedCommands;
 
     HashMap<OptionsByNameTraits> m_optionsByName;
     HashMap<OptionsByShortNameTraits> m_optionsByShortName;

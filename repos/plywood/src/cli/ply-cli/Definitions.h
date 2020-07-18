@@ -8,6 +8,7 @@
 #include <ply-runtime/container/HashMap.h>
 #include <ply-runtime/container/Functor.h>
 #include <ply-runtime/container/Owned.h>
+#include <ply-cli/Optional.h>
 
 namespace ply {
 namespace cli {
@@ -120,12 +121,12 @@ public:
     /*!
     Returns a sub command with the specified name, otherwise nullptr.
     */
-    Command* findCommand(StringView name) const;
+    Borrowed<Command> findCommand(StringView name) const;
 
     /*!
     Run the command's handler if it is valid, otherwise return 1.
     */
-    s32 run(Context* context);
+    s32 run(Context* context) const;
 
 private:
     friend class Context;

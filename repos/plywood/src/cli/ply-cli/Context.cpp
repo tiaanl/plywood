@@ -166,7 +166,7 @@ ArgumentValue* Context::argument(StringView name) const {
 }
 
 // static
-Context Context::build(Command* rootCommand, ArrayView<const StringView> args) {
+Context Context::build(const Command& rootCommand, ArrayView<const StringView> args) {
     Context result{rootCommand};
 
     Array<StringView> passedOptions;
@@ -181,7 +181,7 @@ Context Context::build(Command* rootCommand, ArrayView<const StringView> args) {
                 auto command = result.m_lastCommand->findCommand(arg);
                 if (command) {
                     result.m_passedCommands.append(command);
-                    result.append(command);
+                    result.mergeCommand(*command);
                 } else {
                     passedArguments.append(arg);
                     foundLastCommand = false;
@@ -206,14 +206,14 @@ Context Context::build(Command* rootCommand, ArrayView<const StringView> args) {
     return result;
 }
 
-Context::Context(Command* rootCommand) : m_rootCommand{rootCommand}, m_lastCommand{rootCommand} {
-    append(rootCommand);
+Context::Context(const Command& rootCommand) : m_rootCommand{&rootCommand}, m_lastCommand{&rootCommand} {
+    mergeCommand(rootCommand);
 }
 
-void Context::append(Command* command) {
-    m_lastCommand = command;
+void Context::mergeCommand(const Command& command) {
+    m_lastCommand = &command;
 
-    for (auto& option : command->m_options) {
+    for (auto& option : command.m_options) {
         auto optionValue = Owned<OptionValue>::create(&option);
 
         auto nameCursor = m_optionsByName.insertOrFind(option.name());
@@ -225,7 +225,7 @@ void Context::append(Command* command) {
         *shortNameCursor = nameCursor->borrow();
     }
 
-    for (auto& arg : command->m_arguments) {
+    for (auto& arg : command.m_arguments) {
         auto value = Owned<ArgumentValue>::create(&arg);
 
         auto nameCursor = m_argumentsByName.insertOrFind(arg.name());
