@@ -7,26 +7,39 @@
 namespace ply {
 namespace cli {
 
-Command& Command::handler(Handler handler) {
+void Command::handler(Handler handler) {
     m_handler = std::move(handler);
-    return *this;
 }
 
-Command& Command::add(Option option) {
+Option& Command::option(StringView name, StringView description) {
+    return m_options.append(name, description);
+}
+
+void Command::option(Option option) {
     m_options.append(std::move(option));
-    return *this;
 }
 
-Command& Command::add(Argument argument) {
+Argument& Command::argument(StringView name, StringView description) {
+    return m_arguments.append(name, description);
+}
+
+void Command::argument(Argument argument) {
     m_arguments.append(std::move(argument));
-    return *this;
 }
 
-Command& Command::add(Command command) {
-    auto cursor = m_subCommands.insertOrFind(command.name());
-    PLY_ASSERT(!cursor.wasFound());
-    *cursor = Owned<Command>::create(std::move(command));
-    return *this;
+Command& Command::subCommand(StringView name, StringView description,
+                             Functor<void(Command&)> init) {
+    auto& command = subCommandInternal({name, description});
+
+    if (init.isValid()) {
+        init.call(command);
+    }
+
+    return command;
+}
+
+void Command::subCommand(Command command) {
+    subCommandInternal(std::move(command));
 }
 
 Command* Command::findCommand(StringView name) const {
@@ -36,6 +49,14 @@ Command* Command::findCommand(StringView name) const {
     }
 
     return nullptr;
+}
+
+Command& Command::subCommandInternal(Command&& command) {
+    auto cursor = m_subCommands.insertOrFind(command.name());
+    PLY_ASSERT(!cursor.wasFound());
+    // FIXME: This is a very cumbersome interface.  I don't want to write `new` here.
+    *cursor = new Command(std::forward<Command&&>(command));
+    return *cursor->get();
 }
 
 } // namespace cli

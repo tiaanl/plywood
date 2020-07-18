@@ -266,10 +266,8 @@ s32 codegen_handler(PlyToolCommandEnv*) {
 }
 
 void buildCommand_codegen(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command cmd{"codegen", "Run the code generation in the current build folder."};
-    cmd.handler(wrapHandler(env, codegen_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("codegen", "Run the code generation in the current build folder.",
+                     [env](auto& c) { c.handler(wrapHandler(env, codegen_handler)); });
 }
 
 } // namespace ply

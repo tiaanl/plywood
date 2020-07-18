@@ -238,39 +238,39 @@ s32 extern_installHandler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_extern(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command listCmd{"list", "List all the available external dependencies."};
-    listCmd.handler(wrapHandler(env, extern_listHandler));
+    root->subCommand(
+        "extern", "Manage external dependencies for the current build folder.", [env](auto& ext) {
+            ext.subCommand("list", "List all the available external dependencies.",
+                           [env](auto& c) { c.handler(wrapHandler(env, extern_listHandler)); });
 
-    cli::Command infoCmd{"info", "Show info about the specified external dependency."};
-    infoCmd.add(
-        cli::Argument{"name", "The name of the external dependency to show information for."});
-    infoCmd.handler(wrapHandler(env, extern_infoHandler));
+            ext.subCommand(
+                "info", "Show info about the specified external dependency.", [env](auto& c) {
+                    c.argument("name",
+                               "The name of the external dependency to show information for.");
+                    c.handler(wrapHandler(env, extern_infoHandler));
+                });
 
-    cli::Command selectCmd{"select",
-                           "Select an external dependency to use in the current build folder."};
-    selectCmd.add(
-        cli::Argument{"install", "Specify that the extern should be install if it hasn't yet."});
-    selectCmd.add(
-        cli::Argument{"name", "The fully qualified name of the external dependency to select."});
-    selectCmd.handler(wrapHandler(env, extern_selectHandler));
+            ext.subCommand(
+                "select", "Select an external dependency to use in the current build folder.",
+                [env](auto& c) {
+                    c.option("install",
+                             "Specify that the extern should be install if it hasn't yet.");
+                    c.argument("name",
+                               "The fully qualified name of the external dependency to select.");
+                    c.handler(wrapHandler(env, extern_selectHandler));
+                });
 
-    cli::Command selectedCmd(
-        "selected", "Show the currently selected target for the specified external dependency.");
-    selectedCmd.handler(wrapHandler(env, extern_selectedHandler));
+            ext.subCommand(
+                "selected",
+                "Show the currently selected target for the specified external dependency.",
+                [env](auto& c) { c.handler(wrapHandler(env, extern_selectedHandler)); });
 
-    cli::Command installCmd("install", "Install the selected external dependency.");
-    infoCmd.add(
-        cli::Argument{"name", "The fully qualified name of the external dependency to install."});
-    installCmd.handler(wrapHandler(env, extern_installHandler));
-
-    cli::Command cmd{"extern", "Manage external dependencies for the current build folder."};
-    cmd.add(std::move(listCmd));
-    cmd.add(std::move(infoCmd));
-    cmd.add(std::move(selectCmd));
-    cmd.add(std::move(selectedCmd));
-    cmd.add(std::move(installCmd));
-
-    root->add(std::move(cmd));
+            ext.subCommand("install", "Install the selected external dependency.", [env](auto& c) {
+                c.argument("name",
+                           "The fully qualified name of the external dependency to install.");
+                c.handler(wrapHandler(env, extern_installHandler));
+            });
+        });
 }
 
 } // namespace ply

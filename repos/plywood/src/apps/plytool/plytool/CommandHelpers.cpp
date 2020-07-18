@@ -38,12 +38,12 @@ bool AddParams::exec(build::BuildFolder* folder, StringView fullTargetName) {
 
 // static
 void BuildParams::addCommandLineOptions(cli::Command* command) {
-    // TODO: Add descriptions for these options.
-    command->add(cli::Option{"config", ""});
-    command->add(cli::Option{"add", ""});
-    command->add(cli::Option{"auto", ""});
-    command->add(cli::Option{"shared", ""});
-    command->add(cli::Argument{"target", "The target to build"});
+    // FIXME: Add descriptions for these options.
+    command->option("config", "");
+    command->option("add", "");
+    command->option("auto", "");
+    command->option("shared", "");
+    command->argument("target", "The target to build");
 }
 
 void BuildParams::extractOptions(cli::Context* context) {

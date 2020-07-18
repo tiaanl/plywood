@@ -48,12 +48,12 @@ s32 run_handler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_run(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command cmd{"run", "Run the executable build target of the current build folder."};
-    cmd.add(cli::Option{"nobuild", "Do not build before running the target"});
-    BuildParams::addCommandLineOptions(&cmd);
-    cmd.handler(wrapHandler(env, run_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("run", "Run the executable build target of the current build folder.",
+                     [env](auto& c) {
+                         c.option("nobuild", "Do not build before running the target");
+                         BuildParams::addCommandLineOptions(&c);
+                         c.handler(wrapHandler(env, run_handler));
+                     });
 }
 
 } // namespace ply

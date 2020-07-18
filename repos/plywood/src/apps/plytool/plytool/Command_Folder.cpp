@@ -102,29 +102,29 @@ s32 folder_setHandler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_folder(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command listCommand{"list", "List all the build folders in the workspace."};
-    listCommand.handler(wrapHandler(env, folder_listHandler));
+    root->subCommand(
+        "folder", "Manage build folders in the current workspace.", [env](auto& folder) {
+            folder.subCommand("list", "List all the build folders in the workspace.",
+                              [env](auto& c) { c.handler(wrapHandler(env, folder_listHandler)); });
 
-    cli::Command createCommand{"create", "Create a new build folder in the workspace."};
-    createCommand.add(cli::Argument{"name", "The name of the new build folder."});
-    createCommand.handler(wrapHandler(env, folder_createHandler));
+            folder.subCommand("create", "Create a new build folder in the workspace.",
+                              [env](auto& c) {
+                                  c.argument("name", "The name of the new build folder.");
+                                  c.handler(wrapHandler(env, folder_createHandler));
+                              });
 
-    cli::Command deleteCommand{"delete", "Delete a build folder from the workspace."};
-    deleteCommand.add(cli::Argument{"name", "The name of the build folder to delete."});
-    deleteCommand.handler(wrapHandler(env, folder_deleteHandler));
+            folder.subCommand("delete", "Delete a build folder from the workspace.",
+                              [env](auto& c) {
+                                  c.argument("name", "The name of the build folder to delete.");
+                                  c.handler(wrapHandler(env, folder_deleteHandler));
+                              });
 
-    cli::Command setCommand{"set", "Set the active build folder in the workspace."};
-    setCommand.add(
-        cli::Argument{"name", "The name of the build folder that will be set to active."});
-    setCommand.handler(wrapHandler(env, folder_setHandler));
-
-    cli::Command cmd{"folder", "Manage build folders in the current workspace."};
-    cmd.add(std::move(listCommand));
-    cmd.add(std::move(createCommand));
-    cmd.add(std::move(deleteCommand));
-    cmd.add(std::move(setCommand));
-
-    root->add(std::move(cmd));
+            folder.subCommand(
+                "set", "Set the active build folder in the workspace.", [env](auto& c) {
+                    c.argument("name", "The name of the build folder that will be set to active.");
+                    c.handler(wrapHandler(env, folder_setHandler));
+                });
+        });
 }
 
 } // namespace ply

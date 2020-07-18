@@ -26,7 +26,7 @@ struct PlyToolCommandEnv {
 void fatalError(StringView msg);
 
 PLY_INLINE auto wrapHandler(PlyToolCommandEnv* env, Functor<s32(PlyToolCommandEnv*)> handler) {
-    return [env, &handler](cli::Context* context) {
+    return [env, handler = std::move(handler)](cli::Context* context) {
         env->context = context;
         if (handler.isValid()) {
             return handler.call(env);

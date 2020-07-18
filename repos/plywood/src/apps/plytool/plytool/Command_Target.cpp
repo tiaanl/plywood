@@ -188,34 +188,31 @@ s32 target_graphHandler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_target(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command listCmd{"list", "List targets in the current build folder."};
-    listCmd.handler(wrapHandler(env, target_listHandler));
+    root->subCommand("target", "Manage targets in the selected build folder.", [env](auto& target) {
+        target.subCommand("list", "List targets in the current build folder.",
+                          [env](auto& c) { c.handler(wrapHandler(env, target_listHandler)); });
 
-    cli::Command addCmd{"add", "Add a target to the current build folder."};
-    addCmd.add(cli::Argument{"name", "Name of the target to add to the current build folder."});
-    addCmd.handler(wrapHandler(env, target_addHandler));
+        target.subCommand("add", "Add a target to the current build folder.", [env](auto& c) {
+            c.argument("name", "Name of the target to add to the current build folder.");
+            c.handler(wrapHandler(env, target_addHandler));
+        });
 
-    cli::Command removeCmd{"remove", "Remove a target from the current build folder."};
-    removeCmd.add(
-        cli::Argument("name", "Name of the target to remove from the current build folder."));
-    removeCmd.handler(wrapHandler(env, target_removeHandler));
+        target.subCommand(
+            "remove", "Remove a target from the current build folder.", [env](auto& c) {
+                c.argument("name", "Name of the target to remove from the current build folder.");
+                c.handler(wrapHandler(env, target_removeHandler));
+            });
 
-    cli::Command setCmd{"set", "Set the current target in the current build folder."};
-    setCmd.add(
-        cli::Argument{"name", "Name of the target to set as active in the current build folder."});
-    setCmd.handler(wrapHandler(env, target_setHandler));
+        target.subCommand(
+            "set", "Set the current target in the current build folder.", [env](auto& c) {
+                c.argument("name",
+                           "Name of the target to set as active in the current build folder.");
+                c.handler(wrapHandler(env, target_setHandler));
+            });
 
-    cli::Command graphCmd{"graph", "Show a graph of all the targets in the current build folder."};
-    graphCmd.handler(wrapHandler(env, target_graphHandler));
-
-    cli::Command cmd{"target", "Manage targets in the selected build folder."};
-    cmd.add(std::move(listCmd));
-    cmd.add(std::move(addCmd));
-    cmd.add(std::move(removeCmd));
-    cmd.add(std::move(setCmd));
-    cmd.add(std::move(graphCmd));
-
-    root->add(std::move(cmd));
+        target.subCommand("graph", "Show a graph of all the targets in the current build folder.",
+                          [env](auto& c) { c.handler(wrapHandler(env, target_graphHandler)); });
+    });
 }
 
 } // namespace ply

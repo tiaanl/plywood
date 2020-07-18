@@ -74,10 +74,8 @@ s32 open_handler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_open(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command cmd{"open", "Open the build environment for the current build folder"};
-    cmd.handler(wrapHandler(env, open_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("open", "Open the build environment for the current build folder",
+                     [env](auto& c) { c.handler(wrapHandler(env, open_handler)); });
 }
 
 } // namespace ply

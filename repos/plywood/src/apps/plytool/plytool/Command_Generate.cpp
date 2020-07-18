@@ -32,11 +32,11 @@ s32 generate_handler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_generate(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command cmd{"generate", "Generate the build environment for the current build folder"};
-    cmd.add(cli::Option{"config", "The configuration to use"});
-    cmd.handler(wrapHandler(env, generate_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("generate", "Generate the build environment for the current build folder",
+                     [env](auto& c) {
+                         c.option("config", "The configuration to use");
+                         c.handler(wrapHandler(env, generate_handler));
+                     });
 }
 
 } // namespace ply

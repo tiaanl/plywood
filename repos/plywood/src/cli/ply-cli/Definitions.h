@@ -81,7 +81,7 @@ private:
 
 class Command : public BaseDefinition {
 public:
-    using Handler = Functor<int(Context*)>;
+    using Handler = Functor<s32(Context*)>;
 
     // This constructor is only public, because HashMap needs to default construct objects on
     // insert.
@@ -91,10 +91,16 @@ public:
     Command(StringView name, StringView description) : BaseDefinition{name, description} {
     }
 
-    Command& handler(Handler handle);
-    Command& add(Option option);
-    Command& add(Argument argument);
-    Command& add(Command command);
+    void handler(Handler handle);
+
+    Option& option(StringView name, StringView description);
+    void option(Option option);
+
+    Argument& argument(StringView name, StringView description);
+    void argument(Argument argument);
+
+    Command& subCommand(StringView name, StringView description, Functor<void(Command&)> init);
+    void subCommand(Command command);
 
     Command* findCommand(StringView name) const;
 
@@ -109,6 +115,8 @@ private:
             return item->name();
         }
     };
+
+    Command& subCommandInternal(Command&& command);
 
     Handler m_handler;
     Array<Option> m_options;

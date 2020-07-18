@@ -109,10 +109,8 @@ s32 cleanup_handler(PlyToolCommandEnv*) {
 }
 
 void buildCommand_cleanup(cli::Command* root, PlyToolCommandEnv* env) {
-    auto cmd = cli::Command{"cleanup", "Clean up repository"};
-    cmd.handler(wrapHandler(env, cleanup_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("cleanup", "Clean up repository",
+                     [env](auto& c) { c.handler(wrapHandler(env, cleanup_handler)); });
 }
 
 } // namespace ply

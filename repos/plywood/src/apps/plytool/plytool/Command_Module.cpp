@@ -53,17 +53,13 @@ s32 module_updateHandler(PlyToolCommandEnv*) {
 }
 
 void buildCommand_module(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command listCmd{"list", "List all the modules available in the workspace."};
-    listCmd.handler(wrapHandler(env, module_listHandler));
+    root->subCommand("module", "Manage modules in the workspace.", [env](auto& module) {
+        module.subCommand("list", "List all the modules available in the workspace.",
+                          [env](auto& c) { c.handler(wrapHandler(env, module_listHandler)); });
 
-    cli::Command updateCmd{"update", "Update the module registry for the workspace."};
-    updateCmd.handler(wrapHandler(env, module_updateHandler));
-
-    cli::Command cmd{"module", "Manage modules in the workspace."};
-    cmd.add(std::move(listCmd));
-    cmd.add(std::move(updateCmd));
-
-    root->add(std::move(cmd));
+        module.subCommand("update", "Update the module registry for the workspace.",
+                          [env](auto& c) { c.handler(wrapHandler(env, module_updateHandler)); });
+    });
 }
 
 } // namespace ply

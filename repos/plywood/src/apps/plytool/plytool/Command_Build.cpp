@@ -28,11 +28,11 @@ s32 build_handler(PlyToolCommandEnv* env) {
 }
 
 void buildCommand_build(cli::Command* root, PlyToolCommandEnv* env) {
-    cli::Command cmd{"build", "Build the specified target in the current build folder."};
-    BuildParams::addCommandLineOptions(&cmd);
-    cmd.handler(wrapHandler(env, build_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("build", "Build the specified target in the current build folder.",
+                     [env](auto& c) {
+                         BuildParams::addCommandLineOptions(&c);
+                         c.handler(wrapHandler(env, build_handler));
+                     });
 }
 
 } // namespace ply

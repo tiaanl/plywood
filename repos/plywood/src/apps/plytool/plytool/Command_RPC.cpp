@@ -94,10 +94,7 @@ PLY_NO_INLINE s32 rpc_handler(PlyToolCommandEnv*) {
 }
 
 void buildCommand_rpc(cli::Command* root, PlyToolCommandEnv* env) {
-    auto cmd = cli::Command{"rpc", "RPC?"};
-    cmd.handler(wrapHandler(env, rpc_handler));
-
-    root->add(std::move(cmd));
+    root->subCommand("rpc", "RPC?", [env](auto& c) { c.handler(wrapHandler(env, rpc_handler)); });
 }
 
 } // namespace ply
