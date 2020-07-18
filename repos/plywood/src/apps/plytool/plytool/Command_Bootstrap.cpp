@@ -58,9 +58,8 @@ s32 bootstrap_handler(PlyToolCommandEnv*) {
 }
 
 void buildCommand_bootstrap(cli::Command* root, PlyToolCommandEnv* env) {
-    root->subCommand(
-        "boostrap", "Bootstrap the build files for plytool.",
-        [env](auto& c) { c.handler(wrapHandler(env, bootstrap_handler)); });
+    root->subCommand("boostrap", "Bootstrap the build files for plytool.",
+                     [env](auto& c) { c.handler(wrapHandler(env, bootstrap_handler)); });
 }
 
 } // namespace ply
